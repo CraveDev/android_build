@@ -180,19 +180,26 @@ def LoadRecoveryFSTab(zip):
       raise ValueError("malformed recovery.fstab line: \"%s\"" % (line,))
 
     p = Partition()
-    p.mount_point = pieces[0]
-    p.fs_type = pieces[1]
-    p.device = pieces[2]
+    
+    if pieces[0].startswith("/device/") or pieces[0].startswith("/dev/"):
+      p.device = pieces[0]
+      p.mount_point = pieces[1]
+      p.fs_type = pieces[2]
+    else:
+      p.mount_point = pieces[0]
+      p.fs_type = pieces[1]
+      p.device = pieces[2]
+    
     p.length = 0
     options = None
     if len(pieces) >= 4 and pieces[3] != 'NULL':
       if pieces[3].startswith("/"):
-        p.device2 = pieces[3]
-        if len(pieces) >= 5:
-          options = pieces[4]
+	p.device2 = pieces[3]
+	if len(pieces) >= 5:
+	  options = pieces[4]
       else:
-        p.device2 = None
-        options = pieces[3]
+	p.device2 = None
+	options = pieces[3]
     else:
       p.device2 = None
 
@@ -204,6 +211,7 @@ def LoadRecoveryFSTab(zip):
         else:
           print "%s: unknown option \"%s\"" % (p.mount_point, i)
 
+    print "Mount: %s | Point: %s" % (p.mount_point, p)
     d[p.mount_point] = p
   return d
 
